@@ -135,31 +135,55 @@ static bool loadLights(const std::string& path, std::vector<Light>& lights) {
 
 //Moller-Trumbore
 __device__ inline bool rayTri(const float3& O, const float3& D, const Triangle& T, float& tOut) {
-    
+
+    //  triangle vertices
     const float3 v0 = T.v0, v1 = T.v1, v2 = T.v2;
+
+    //  two edges from v0
     const float3 e1 = v1 - v0;
     const float3 e2 = v2 - v0;
 
+    // helper vector
     const float3 p = cross3(D, e2);
+
+    // determinant: tells if ray is parallel and also sets orientation
     const float det = dot3(e1, p);
+
+   
     if (fabsf(det) < 1e-8f) return false; // almost parallel, we dont care, no hit
 
+    
     const float invDet = 1.0f / det;
+
+    // vector from triangle v0 to ray origin
     const float3 s = O - v0;
 
+    // how far along edge e1 the hit is
     const float u = dot3(s, p) * invDet;
+
+    //  intersection point is outside triangle
     if (u < 0.0f || u > 1.0f) return false;
 
+    // another helper 
     const float3 q = cross3(s, e1);
+
+    // how far along edge e2 the hit is
     const float v = dot3(D, q) * invDet;
+
+    // outside
     if (v < 0.0f || (u + v) > 1.0f) return false;
 
+    // t is the distance along the ray: P = O + t * D
     const float t = dot3(e2, q) * invDet;
-    if (t <= 0.0f) return false; 
 
+    
+    if (t <= 0.0f) return false;
+
+    // output closest distance to caller
     tOut = t;
     return true;
 }
+
 
 __device__ inline uint32_t packRGBA8(float r, float g, float b) {
 
